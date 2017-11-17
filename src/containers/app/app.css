@@ -1,0 +1,13 @@
+main {
+  flex: 1 0 auto !important;
+}
+
+.appWrapper {
+  display: flex !important;
+  min-height: 100vh !important;
+  flex-direction: column !important;
+}
+
+.selected {
+  background-color: #689f38;
+}
