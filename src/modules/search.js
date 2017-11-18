@@ -95,7 +95,6 @@ export const search = query => {
 
       query = query.trim()
       const data = await searchShowsAsync(query)
-      console.log('data', data)
       let parsed = []
 
       if (!_.isEmpty(data)) {
@@ -103,33 +102,13 @@ export const search = query => {
           data.map(async d => {
             const nextEpisodeUrl = _.get(d, 'show._links.nextepisode.href')
             if (nextEpisodeUrl) {
-              let episodes = await getShowEpisodes(d.show.id)
-              episodes = episodes.map(episode => {
-                const image = _.get(
-                  episode,
-                  'image.medium',
-                  _.get(d, 'show.image.medium'),
-                  MISSING_IMAGE,
-                )
-                return {
-                  ...episode,
-                  image,
-                  episodeTag: `s${('00' + episode.season).slice(-2)}e${(
-                    '00' +
-                    (episode.number - 1)
-                  ).slice(-2)}`,
-                }
-              })
-              const nextEpisode = getNextEpisodeByUrl(episodes, nextEpisodeUrl)
-              const episodeTag = `s${('00' + nextEpisode.season).slice(-2)}e${(
-                '00' +
-                (nextEpisode.number - 1)
-              ).slice(-2)}`
-
+              let nextEpisode = await getNextEpisode(nextEpisodeUrl)
+              nextEpisode.episodeTag = getEpisodeTag(nextEpisode)
+              const seasons = await getSeasonsByShowId(d.show.id)
               const links = [
                 {
                   title: 'EZTV',
-                  href: `${URL_EZTV}${d.show.name}-${episodeTag}`,
+                  href: `${URL_EZTV}${d.show.name}-${nextEpisode.episodeTag}`,
                 },
               ]
 
@@ -158,9 +137,9 @@ export const search = query => {
                 rating: d.show.rating ? d.show.rating.average : '',
                 updated: d.show.updated,
                 relevance: d.score,
-                episodes,
                 nextEpisode,
                 links,
+                seasons,
               }
             } else {
               return
@@ -202,6 +181,18 @@ const getShowEpisodes = async id =>
 const getNextEpisodeByUrl = (episodes, url) => {
   const episodeId = Number.parseInt(url.substr(url.lastIndexOf('/') + 1))
   return _.filter(episodes, ['id', episodeId]).shift()
+}
+
+const getSeasonsByShowId = async id =>
+  await (await fetch(`http://api.tvmaze.com/shows/${id}/seasons`)).json()
+
+const getNextEpisode = async url => await (await fetch(url)).json()
+
+const getEpisodeTag = episode => {
+  return `s${('00' + episode.season).slice(-2)}e${(
+    '00' +
+    (episode.number - 1)
+  ).slice(-2)}`
 }
 
 export const sortBy = (sortBy, accessor) => {
