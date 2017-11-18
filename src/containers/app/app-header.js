@@ -1,11 +1,5 @@
 import React from 'react'
-// import { bindActionCreators } from 'redux'
-// import { connect } from 'react-redux'
 import { Route, NavLink } from 'react-router-dom'
-// import { Button, Icon, Navbar, NavItem } from 'react-materialize'
-
-// import AddEvent from '../add-event'
-// import { addEvent } from '../../modules/calendarEvents'
 
 class AppHeader extends React.Component {
   render() {
@@ -15,7 +9,7 @@ class AppHeader extends React.Component {
           <nav>
             <div className="nav-wrapper light-blue darken-3">
               <NavLink exact to="/search" className="brand-logo right">
-                ShowPlan
+                ShowBro
               </NavLink>
               <ul className="left">
                 <li>
@@ -43,17 +37,3 @@ class AppHeader extends React.Component {
 }
 
 export default AppHeader
-
-// const mapStateToProps = state => ({
-//   events: state.calendarEvents,
-// })
-
-// const mapDispatchToProps = dispatch =>
-//   bindActionCreators(
-//     {
-//       addEvent,
-//     },
-//     dispatch,
-//   )
-
-// export default connect(mapStateToProps, mapDispatchToProps)(Navigation)

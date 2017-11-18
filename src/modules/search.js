@@ -75,6 +75,7 @@ export default (state = initialState, action) => {
 
 export const search = query => {
   return async (dispatch, getState) => {
+    if (_.isEmpty(query)) return
     try {
       dispatch({
         type: SEARCH_REQUESTED,
@@ -102,7 +103,23 @@ export const search = query => {
           data.map(async d => {
             const nextEpisodeUrl = _.get(d, 'show._links.nextepisode.href')
             if (nextEpisodeUrl) {
-              const episodes = await getShowEpisodes(d.show.id)
+              let episodes = await getShowEpisodes(d.show.id)
+              episodes = episodes.map(episode => {
+                const image = _.get(
+                  episode,
+                  'image.medium',
+                  _.get(d, 'show.image.medium'),
+                  MISSING_IMAGE,
+                )
+                return {
+                  ...episode,
+                  image,
+                  episodeTag: `s${('00' + episode.season).slice(-2)}e${(
+                    '00' +
+                    (episode.number - 1)
+                  ).slice(-2)}`,
+                }
+              })
               const nextEpisode = getNextEpisodeByUrl(episodes, nextEpisodeUrl)
               const episodeTag = `s${('00' + nextEpisode.season).slice(-2)}e${(
                 '00' +

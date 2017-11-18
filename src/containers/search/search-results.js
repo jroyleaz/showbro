@@ -4,15 +4,19 @@ import {
   Col,
   Collection,
   CollectionItem,
-  Icon,
-  Input,
   Row,
+  Tabs,
+  Tab,
 } from 'react-materialize'
-import { DebounceInput } from 'react-debounce-input'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 
-import { resultsReady, searchResults } from './selectors'
+import {
+  previousEpisodes,
+  previousEpisodesImages,
+  resultsReady,
+  searchResults,
+} from './selectors'
 
 import './search.css'
 
@@ -41,16 +45,16 @@ class SearchResults extends React.Component {
                           src={show.image}
                           alt={show.name}
                         />
-                        <span className="title">
-                          <b>{show.name}</b> on {show.network}
-                        </span>
-                        <p>
-                          <b>Next Episode</b>: <i>{show.nextEpisode.name}</i>
-                          <br />
-                          <b>Airs</b>: {show.nextEpisode.airdate}
-                        </p>
+                        <Tabs className="tab-demo z-depth-1">
+                          <Tab title="Test 1">Test 1</Tab>
+                          <Tab title="Test 2" active>
+                            Test 2
+                          </Tab>
+                          <Tab title="Test 3">Test 3</Tab>
+                          <Tab title="Test 4">Test 4</Tab>
+                        </Tabs>
                       </Col>
-                      <Col className="right-align" s={6}>
+                      {/* <Col className="right-align" s={6}>
                         <Row className="valign-wrapper">
                           <Col s={12}>
                             <Icon>favorite_border</Icon>
@@ -71,7 +75,7 @@ class SearchResults extends React.Component {
                             )
                           })}
                         </Col>
-                      </Col>
+                      </Col> */}
                     </Row>
                   </CollectionItem>
                 )
@@ -98,6 +102,8 @@ const mapStateToProps = state => ({
   isSearching: state.search.isSearching,
   searchEmpty: state.search.searchEmpty,
   resultsReady: resultsReady(state),
+  previousEpisodes: num => previousEpisodes(state, num),
+  previousEpisodesImages: previousEpisodesImages(state),
 })
 
 const mapDispatchToProps = dispatch => bindActionCreators({}, dispatch)

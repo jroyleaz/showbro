@@ -10,3 +10,14 @@
   background-color: #689f38 !important;
   color: white !important;
 }
+
+.Search-Results-episode-carousel {
+  width: 200px;
+  height: 200px !important;
+}
+
+.carousel-item,
+active img {
+  max-height: 112px !important;
+  overflow: hidden !important;
+}
