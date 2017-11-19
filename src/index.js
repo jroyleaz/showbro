@@ -6,6 +6,7 @@ import store, { history } from './store'
 import App from './containers/app'
 
 import './index.css'
+import 'semantic-ui-css/semantic.min.css'
 
 const target = document.querySelector('#root')
 

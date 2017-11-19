@@ -1,4 +1,4 @@
-import Promise, { getNewLibraryCopy } from 'bluebird'
+import Promise from 'bluebird'
 import _ from 'lodash'
 
 export const SEARCH_REQUESTED = 'search/SEARCH_REQUESTED'
@@ -67,6 +67,10 @@ export default (state = initialState, action) => {
         ...state,
         isSearching: false,
         searchEmpty: false,
+        searchResults: {
+          ...state.searchResults,
+          [action.key]: action.payload,
+        },
       }
     default:
       return state
@@ -84,12 +88,13 @@ export const search = query => {
 
       const state = getState()
 
-      if (
-        state.search.searchResults[state.search.searchQuery] &&
-        state.search.searchResults[state.search.searchQuery].length > 0
-      ) {
+      const cachedData = loadCachedData(query, state)
+
+      if (cachedData) {
         return dispatch({
           type: CACHE_USED,
+          key: query,
+          payload: cachedData,
         })
       }
 
@@ -101,48 +106,43 @@ export const search = query => {
         parsed = await Promise.all(
           data.map(async d => {
             const nextEpisodeUrl = _.get(d, 'show._links.nextepisode.href')
+            let nextEpisode = []
             if (nextEpisodeUrl) {
-              let nextEpisode = await getNextEpisode(nextEpisodeUrl)
+              nextEpisode = await getNextEpisode(nextEpisodeUrl)
               nextEpisode.episodeTag = getEpisodeTag(nextEpisode)
-              const seasons = await getSeasonsByShowId(d.show.id)
-              const links = [
-                {
-                  title: 'EZTV',
-                  href: `${URL_EZTV}${d.show.name}-${nextEpisode.episodeTag}`,
-                },
-              ]
+            }
 
-              if (d.show.externals.imdb)
-                links.push({
-                  title: 'IMDB',
-                  href: `${URL_IMDB}${d.show.externals.imdb}`,
-                })
+            const seasons = await getSeasonsByShowId(d.show.id)
+            const links = []
 
-              if (d.show.externals.thetvdb)
-                links.push({
-                  title: 'The TVDB',
-                  href: `${URL_IMDB}${d.show.externals.thetvdb}`,
-                })
+            if (d.show.externals.imdb)
+              links.push({
+                title: 'IMDB',
+                href: `${URL_IMDB}${d.show.externals.imdb}`,
+              })
 
-              return {
-                id: d.show.id,
-                name: d.show.name ? d.show.name : 'Unknown',
-                summary: !_.isEmpty(d.show.summary)
-                  ? stripHtml(d.show.summary)
-                  : 'No summary data found',
-                status: d.show.status,
-                network: d.show.network ? d.show.network.name : 'Unknown',
-                premiered: d.show.premiered,
-                image: d.show.image ? d.show.image.medium : MISSING_IMAGE,
-                rating: d.show.rating ? d.show.rating.average : '',
-                updated: d.show.updated,
-                relevance: d.score,
-                nextEpisode,
-                links,
-                seasons,
-              }
-            } else {
-              return
+            if (d.show.externals.thetvdb)
+              links.push({
+                title: 'The TVDB',
+                href: `${URL_IMDB}${d.show.externals.thetvdb}`,
+              })
+
+            return {
+              id: d.show.id,
+              name: d.show.name ? d.show.name : 'Unknown',
+              summary: !_.isEmpty(d.show.summary)
+                ? stripHtml(d.show.summary)
+                : 'No summary data found',
+              status: d.show.status,
+              network: d.show.network ? d.show.network.name : 'Unknown',
+              premiered: d.show.premiered,
+              image: d.show.image ? d.show.image.medium : MISSING_IMAGE,
+              rating: d.show.rating ? d.show.rating.average : '',
+              updated: d.show.updated,
+              relevance: d.score,
+              nextEpisode,
+              links,
+              seasons,
             }
           }),
         )
@@ -161,13 +161,16 @@ export const search = query => {
         state.search.searchSorting.sortBy,
         state.search.searchSorting.sortDirection,
       )
+
+      saveDataToCache(query, parsed)
+
       return dispatch({
         type: SEARCH_COMPLETED,
         key: query,
         payload: parsed,
       })
     } catch (e) {
-      console.log('error', e)
+      console.log('Search Error: ', e)
     }
   }
 }
@@ -193,6 +196,23 @@ const getEpisodeTag = episode => {
     '00' +
     (episode.number - 1)
   ).slice(-2)}`
+}
+
+const saveDataToCache = (key, data) => {
+  sessionStorage.setItem(key, JSON.stringify(data))
+}
+
+const loadCachedData = (key, state) => {
+  // Check state cache first
+  if (
+    state.search.searchResults[key] &&
+    state.search.searchResults[key].length > 0
+  ) {
+    return state.search.searchResults[key]
+  }
+
+  // Check sessionStorage
+  return JSON.parse(sessionStorage.getItem(key))
 }
 
 export const sortBy = (sortBy, accessor) => {

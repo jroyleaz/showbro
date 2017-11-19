@@ -3,7 +3,8 @@ import { Route } from 'react-router-dom'
 import AppFooter from './app-footer'
 import AppHeader from './app-header'
 
-import Search from '../search'
+import { SearchForm } from '../search-form'
+import { ShowDetails } from '../search-results'
 
 import './app.css'
 
@@ -14,8 +15,9 @@ class App extends React.Component {
         <AppHeader />
 
         <main>
-          <Route exact path="/search" component={Search} />
-          <Route path="/search/:query" component={Search} />
+          <Route exact path="/search" component={SearchForm} />
+          <Route exact path="/search/:query" component={SearchForm} />
+          <Route exact path="/show/:id" component={ShowDetails} />
         </main>
 
         <AppFooter />
